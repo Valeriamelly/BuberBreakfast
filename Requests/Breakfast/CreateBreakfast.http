@@ -1,0 +1,22 @@
+POST https://localhost:7168/breakfasts
+Content-Type: application/json
+
+{
+    "name": "Vegan Sunshine",
+    "description": "Vegan everything! Join us for a healthy breakfast..",
+    "startDateTime": "2022-04-08T08:00:00",
+    "endDateTime": "2022-04-08T11:00:00",
+    "savory": [
+        "Oatmeal",
+        "Avocado Toast",
+        "Omelette",
+        "Salad"
+    ],
+    "Sweet": [
+        "Cookie"
+    ]
+}
+
+###
+GET  https://localhost:7168/breakfasts/2eca7b4b-b0b1-443f-b496-6c9dc5bf2cc3
+
