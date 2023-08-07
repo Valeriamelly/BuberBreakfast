@@ -22,3 +22,4 @@ D:\PROGRAMACION\NET\BuberBreakfast\BuberBreakfast\obj\Debug\net6.0\refint\BuberB
 D:\PROGRAMACION\NET\BuberBreakfast\BuberBreakfast\obj\Debug\net6.0\BuberBreakfast.pdb
 D:\PROGRAMACION\NET\BuberBreakfast\BuberBreakfast\obj\Debug\net6.0\BuberBreakfast.genruntimeconfig.cache
 D:\PROGRAMACION\NET\BuberBreakfast\BuberBreakfast\obj\Debug\net6.0\ref\BuberBreakfast.dll
+D:\PROGRAMACION\NET\BuberBreakfast\BuberBreakfast\bin\Debug\net6.0\ErrorOr.dll

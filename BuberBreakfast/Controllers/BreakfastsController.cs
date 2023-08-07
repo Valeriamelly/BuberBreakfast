@@ -1,13 +1,13 @@
 using BuberBreakfast.Contracts.Breakfast;
 using BuberBreakfast.Models;
+using BuberBreakfast.ServiceErrors;
 using BuberBreakfast.Services.Breakfasts;
+using ErrorOr;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BuberBreakfast.Controllers;
 
-[ApiController] //definir que esta clase es un controlador de API
-[Route("breakfasts")] // las rutas para acceder a los métodos del controlador estarán basadas en el nombre del controlador
-public class BreakfastController : ControllerBase
+public class BreakfastController : ApiController
 {   // su valor no se podrá modificar después de la inicialización.
     private readonly IBreakfastService _breakfastService;
     //inyección de dependencia
@@ -54,20 +54,36 @@ public class BreakfastController : ControllerBase
 
     [HttpGet("{id:guid}")]
     public IActionResult GetBreakfast(Guid id)
-    {        
-        Breakfast breakfast = _breakfastService.GetBreakfast(id);
-        
-        var response = new BreakfastResponse (
-            breakfast.Id,
-            breakfast.Name,
-            breakfast.Description,
-            breakfast.StartDateTime,
-            breakfast.EndDateTime,
-            breakfast.LastModifiedDateTime,
-            breakfast.Savory,
-            breakfast.Sweet
-        );
-        return Ok(response);
+    {
+        ErrorOr<Breakfast> getBreakfastResult = _breakfastService.GetBreakfast(id);
+
+        return getBreakfastResult.Match(
+            breakfast => Ok(MapBreakfastResponse(breakfast)), // acción que se ejecutará si la operación fue exitosa.
+            errors => Problem(errors)); // acción que se ejecutará si ocurrió un error durante la operación
+
+        //if (getBreakfastResult.IsError &&
+        //   getBreakfastResult.FirstError == Errors.Breakfast.NotFound)
+        //{
+        //    return NotFound();
+        //}
+        //var breakfast = getBreakfastResult.Value; //Si no se produjo un error y se encontró el desayuno, se obtiene el valor del desayuno 
+
+        //BreakfastResponse response = MapBreakfastResponse(breakfast);
+        //return Ok(response);
+    }
+
+    private static BreakfastResponse MapBreakfastResponse(Breakfast breakfast)
+    {
+        return new BreakfastResponse(
+                    breakfast.Id,
+                    breakfast.Name,
+                    breakfast.Description,
+                    breakfast.StartDateTime,
+                    breakfast.EndDateTime,
+                    breakfast.LastModifiedDateTime,
+                    breakfast.Savory,
+                    breakfast.Sweet
+                );
     }
 
     [HttpPut("{id:guid}")]
