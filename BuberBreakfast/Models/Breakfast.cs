@@ -46,7 +46,6 @@ public class Breakfast
             string description,
             DateTime startDateTime,
             DateTime endDateTime,
-            DateTime lastModifiedDateTime,
             List<string> savory,
             List<string> sweet,
             Guid? id = null
@@ -74,14 +73,33 @@ public class Breakfast
                 description,
                 startDateTime,
                 endDateTime,
-                lastModifiedDateTime,
+                DateTime.UtcNow,
                 savory,
                 sweet
                 );
         }
 
-    internal static ErrorOr<Breakfast> Create(string name, string description, DateTime startDateTime, DateTime endDateTime, List<string> savory, List<string> sweet, Guid id)
+    
+    public static ErrorOr<Breakfast> From(CreateBreakfastRequest request)
     {
-        throw new NotImplementedException();
+        return Create(
+            request.Name,
+            request.Description,
+            request.StartDateTime,
+            request.EndDateTime,
+            request.Savory,
+            request.Sweet);
+    }
+
+    public static ErrorOr<Breakfast> From(Guid id, UpsertBreakfastRequest request)
+    {
+        return Create(
+            request.Name,
+            request.Description,
+            request.StartDateTime,
+            request.EndDateTime,
+            request.Savory,
+            request.Sweet,
+            id);
     }
 }
