@@ -20,8 +20,7 @@ public class BreakfastController : ApiController
     [HttpPost]
     public IActionResult CreateBreakfast(CreateBreakfastRequest request)
     {
-        var breakfast = new Breakfast(
-            Guid.NewGuid(),
+        ErrorOr<Breakfast> requestToBreakfastResult=  Breakfast.Create(
             request.Name,
             request.Description,
             request.StartDateTime,
@@ -30,27 +29,21 @@ public class BreakfastController : ApiController
             request.Savory,
             request.Sweet);
 
-        _breakfastService.CreateBreakfast(breakfast);
+        if ( requestToBreakfastResult.IsError)
+        {
+            return Problem(requestToBreakfastResult.Errors);
+        }
 
-        //guardar en BD
-        var response = new BreakfastResponse(
-            breakfast.Id,
-            breakfast.Name,
-            breakfast.Description,
-            breakfast.StartDateTime,
-            breakfast.EndDateTime,
-            breakfast.LastModifiedDateTime,
-            breakfast.Savory,
-            breakfast.Sweet
-        );        
-        //devolver un resultado HTTP 201 (Created) junto con la URL del nuevo desayuno creado.
-        return CreatedAtAction(
-            actionName: nameof(GetBreakfast),
-            routeValues: new { id = breakfast.Id },
-            value: response
+        var breakfast = requestToBreakfastResult.Value;
+        ErrorOr<Created> createBreakfastResult = _breakfastService.CreateBreakfast(breakfast);
+
+        return createBreakfastResult.Match(
+            created => CreatedAtGetBreakfast(breakfast),
+            errors => Problem(errors)
         );
 
     }
+
 
     [HttpGet("{id:guid}")]
     public IActionResult GetBreakfast(Guid id)
@@ -61,15 +54,46 @@ public class BreakfastController : ApiController
             breakfast => Ok(MapBreakfastResponse(breakfast)), // acción que se ejecutará si la operación fue exitosa.
             errors => Problem(errors)); // acción que se ejecutará si ocurrió un error durante la operación
 
-        //if (getBreakfastResult.IsError &&
-        //   getBreakfastResult.FirstError == Errors.Breakfast.NotFound)
-        //{
-        //    return NotFound();
-        //}
-        //var breakfast = getBreakfastResult.Value; //Si no se produjo un error y se encontró el desayuno, se obtiene el valor del desayuno 
+    }
 
-        //BreakfastResponse response = MapBreakfastResponse(breakfast);
-        //return Ok(response);
+    [HttpPut("{id:guid}")]
+    public IActionResult UpsertBreakfast(Guid id, UpsertBreakfastRequest request)
+    {
+        
+        ErrorOr<Breakfast> requestToBreakfastResult = Breakfast.Create(
+            request.Name, 
+            request.Description,
+            request.StartDateTime,
+            request.EndDateTime,
+            request.Savory,
+            request.Sweet,
+            id
+
+        );
+
+        if ( requestToBreakfastResult.IsError)
+        {
+            return Problem(requestToBreakfastResult.Errors);
+        }
+
+        var breakfast = requestToBreakfastResult.Value;
+        ErrorOr<UpsertedBreakfast> upsertBreakfastResult = _breakfastService.UpsertBreakfast(breakfast);
+
+        return upsertBreakfastResult.Match(
+            upserted => upserted.IsNewlyCreated ? CreatedAtGetBreakfast(breakfast): NoContent(),
+            errors => Problem(errors)
+            );
+        
+    }
+
+    [HttpDelete("{id:guid}")]
+    public IActionResult DeleteBreakfast(Guid id)
+    {
+        ErrorOr<Deleted> deletedResult = _breakfastService.DeleteBreakfast(id);
+        return deletedResult.Match(
+            deletedResult => NoContent(), // acción que se ejecutará si la operación fue exitosa y no mostrará el contenido porque se está eliminando.
+            errors => Problem(errors)); // acción que se ejecutará si ocurrió un error durante la operación
+
     }
 
     private static BreakfastResponse MapBreakfastResponse(Breakfast breakfast)
@@ -86,34 +110,15 @@ public class BreakfastController : ApiController
                 );
     }
 
-    [HttpPut("{id:guid}")]
-    public IActionResult UpsertBreakfast(Guid id, UpsertBreakfastRequest request)
+    private CreatedAtActionResult CreatedAtGetBreakfast(Breakfast breakfast)
     {
-        var breakfast = new Breakfast(
-            id, // Se coloca el id que viene de la ruta 
-            request.Name, 
-            request.Description,
-            request.StartDateTime,
-            request.EndDateTime,
-            DateTime.UtcNow,
-            request.Savory,
-            request.Sweet
-
+        //devolver un resultado HTTP 201 (Created) junto con la URL del nuevo desayuno creado.
+        return CreatedAtAction(
+            actionName: nameof(GetBreakfast),
+            routeValues: new { id = breakfast.Id },
+            value: MapBreakfastResponse(breakfast)
         );
-
-        _breakfastService.UpsertBreakfast(breakfast);
-
-        return NoContent(); // en caso de que ya exista un id
-
     }
-
-    [HttpDelete("{id:guid}")]
-    public IActionResult DeleteBreakfast(Guid id)
-    {
-        _breakfastService.DeleteBreakfast(id);
-        return NoContent();
-    }
-
 
 
 }
